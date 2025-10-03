@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>DrawPro - Professional Mobile Drawing</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="icon-btn" id="menuBtn" title="Menu">
+                    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
+                <button class="icon-btn" id="undoBtn" title="Annulla">
+                    <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+                </button>
+                <button class="icon-btn" id="redoBtn" title="Ripeti">
+                    <svg viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+                </button>
+            </div>
+            <div class="project-name">Nuovo Progetto</div>
+            <div class="top-bar-right">
+                <button class="icon-btn" id="layersBtn" title="Livelli">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>
+                </button>
+                <button class="icon-btn" id="settingsBtn" title="Impostazioni">
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Canvas Area -->
+        <main class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+            <div id="canvasOverlay"></div>
+        </main>
+
+        <!-- Tools Bar -->
+        <aside class="tools-bar">
+            <button class="tool-btn active" data-tool="brush" data-brush-type="round" title="Pennello Tondo">
+                <svg viewBox="0 0 24 24"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="dynamic" title="Pennello Dinamico">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="airbrush" title="Aerografo">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-12.5c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="calligraphy" title="Calligrafia">
+                <svg viewBox="0 0 24 24"><path d="M14.06 9.94L12 9l2.06-.94L15 6l.94 2.06L18 9l-2.06.94L15 12l-.94-2.06zM4 14l.94-2.06L7 11l-2.06-.94L4 8l-.94 2.06L1 11l2.06.94L4 14zm4.5-5l1.09-2.41L12 5.5 9.59 4.41 8.5 2 7.41 4.41 5 5.5l2.41 1.09L8.5 9zm-4 11.5l6-6.01 4 4L23 8.93l-1.41-1.41-7.09 7.97-4-4L3 19z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="marker" title="Marker">
+                <svg viewBox="0 0 24 24"><path d="M18.5 1.15c-.53 0-1.04.21-1.41.59L4.34 14.49c-.39.39-.39 1.02 0 1.41l2.75 2.75c.39.39 1.02.39 1.41 0L21.25 5.9c.78-.78.78-2.05 0-2.83l-.92-.92c-.37-.38-.88-.59-1.41-.59-.53 0-1.04.21-1.41.59l-1.67 1.67-2.83-2.83L14.42.58c.37-.37.37-.98 0-1.35-.19-.19-.44-.29-.71-.29-.27 0-.52.1-.71.29L1.29 10.96c-.39.39-.39 1.02 0 1.41L3.54 14.62c.39.39 1.02.39 1.41 0L16.68 2.89l2.83 2.83-1.67 1.67c-.37.37-.37.98 0 1.35.19.19.44.29.71.29.27 0 .52-.1.71-.29l2.12-2.12c.78-.78.78-2.05 0-2.83l-.92-.92c-.37-.38-.88-.59-1.41-.59zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="soft" title="Pennello Morbido">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="textured" title="Pennello Texture">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="splatter" title="Splatter">
+                <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="neon" title="Neon">
+                <svg viewBox="0 0 24 24"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="brush" data-brush-type="watercolor" title="Acquerello">
+                <svg viewBox="0 0 24 24"><path d="M17.66 7.93L12 2.27 6.34 7.93c-3.12 3.12-3.12 8.19 0 11.31C7.9 20.8 9.95 21.58 12 21.58c2.05 0 4.1-.78 5.66-2.34 3.12-3.12 3.12-8.19 0-11.31zM12 19.59c-1.6 0-3.11-.62-4.24-1.76C6.62 16.69 6 15.19 6 13.59s.62-3.11 1.76-4.24L12 5.1l4.24 4.24c1.14 1.14 1.76 2.64 1.76 4.24 0 1.6-.62 3.11-1.76 4.24-1.13 1.14-2.64 1.77-4.24 1.77z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="pencil" title="Matita">
+                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="eraser" title="Gomma">
+                <svg viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0M4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-6.36-6.36-3.54 3.53c-.78.79-.78 2.05 0 2.83z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="line" title="Linea">
+                <svg viewBox="0 0 24 24"><path d="M23 8c0 1.1-.9 2-2 2-.18 0-.35-.02-.51-.07l-3.56 3.55c.05.16.07.34.07.52 0 1.1-.9 2-2 2s-2-.9-2-2c0-.18.02-.36.07-.52l-2.55-2.55c-.16.05-.34.07-.52.07s-.36-.02-.52-.07l-4.55 4.56c.05.16.07.33.07.51 0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2c.18 0 .35.02.51.07l4.56-4.55C8.02 9.36 8 9.18 8 9c0-1.1.9-2 2-2s2 .9 2 2c0 .18-.02.36-.07.52l2.55 2.55c.16-.05.34-.07.52-.07s.36.02.52.07l3.55-3.56C19.02 8.35 19 8.18 19 8c0-1.1.9-2 2-2s2 .9 2 2z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="rectangle" title="Rettangolo">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="circle" title="Cerchio">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="text" title="Testo">
+                <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="fill" title="Riempimento">
+                <svg viewBox="0 0 24 24"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15c-.59.59-.59 1.54 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z"/></svg>
+            </button>
+            <button class="tool-btn" data-tool="eyedropper" title="Contagocce">
+                <svg viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/></svg>
+            </button>
+        </aside>
+
+        <!-- Bottom Control Bar -->
+        <footer class="control-bar">
+            <div class="control-row">
+                <div class="control-compact color-picker-wrapper">
+                    <div class="color-display" id="colorDisplay">
+                        <div class="current-color" id="currentColor"></div>
+                        <svg viewBox="0 0 24 24" class="color-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    </div>
+                    <input type="color" id="colorPicker" value="#000000" class="color-input-hidden">
+                    <div class="color-picker-dropdown" id="colorPickerDropdown">
+                        <div class="color-picker-header">
+                            <span>Colore</span>
+                            <button class="color-close-btn" id="closeColorPicker">×</button>
+                        </div>
+                        <div class="color-picker-body">
+                            <div class="color-custom-selector">
+                                <div class="color-preview-large" id="colorPreviewLarge"></div>
+                                <button class="color-picker-btn" id="openNativePicker">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                                    Personalizza
+                                </button>
+                            </div>
+                            <div class="color-section">
+                                <div class="color-section-title">Recenti</div>
+                                <div class="color-palette" id="recentColors"></div>
+                            </div>
+                            <div class="color-section">
+                                <div class="color-section-title">Palette</div>
+                                <div class="color-palette" id="paletteColors"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-compact">
+                    <label class="control-mini-label">Dim</label>
+                    <input type="range" id="brushSize" min="1" max="100" value="5" class="slider-compact">
+                    <span id="brushSizeValue" class="value-mini">5</span>
+                </div>
+                <div class="control-compact">
+                    <label class="control-mini-label">Opa</label>
+                    <input type="range" id="opacity" min="0" max="100" value="100" class="slider-compact">
+                    <span id="opacityValue" class="value-mini">100</span>
+                </div>
+            </div>
+            <div class="control-row">
+                <button class="control-icon-btn" id="panModeBtn" title="Pan Mode (Sposta Canvas)">
+                    <svg viewBox="0 0 24 24"><path d="M23 5.5V20c0 2.2-1.8 4-4 4h-7.3c-1.08 0-2.1-.43-2.85-1.19L1 14.83s1.26-1.23 1.3-1.25c.22-.19.49-.29.79-.29.22 0 .42.06.6.16.04.01 4.31 2.46 4.31 2.46V4c0-.83.67-1.5 1.5-1.5S11 3.17 11 4v7h1V1.5c0-.83.67-1.5 1.5-1.5S15 .67 15 1.5V11h1V2.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V11h1V5.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5z"/></svg>
+                </button>
+                <button class="control-icon-btn" id="canvasControlBtn" title="Canvas">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-8-2h2v-2h2v-2h-2v-2h-2v2H9v2h2z"/></svg>
+                </button>
+                <div class="zoom-group">
+                    <button class="control-icon-btn" id="zoomOutBtn" title="Zoom Out">
+                        <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+                    </button>
+                    <span id="zoomValue" class="value-mini">100</span>
+                    <button class="control-icon-btn" id="zoomInBtn" title="Zoom In">
+                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    </button>
+                    <button class="control-icon-btn" id="zoomResetBtn" title="Reset">
+                        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Canvas Control Panel -->
+        <div id="canvasControlPanel" class="canvas-panel">
+            <div class="canvas-panel-header">
+                <h3>Canvas</h3>
+                <button class="close-btn" id="closeCanvasPanelBtn">×</button>
+            </div>
+            <div class="canvas-panel-content">
+                <div class="canvas-info-row">
+                    <div class="canvas-info-item">
+                        <span class="canvas-info-label">Dimensioni</span>
+                        <div class="canvas-size-display" id="canvasSizeDisplay">1920 × 1080</div>
+                    </div>
+                    <div class="canvas-info-item">
+                        <span class="canvas-info-label">Zoom</span>
+                        <div class="canvas-zoom-display" id="canvasZoomDisplay">100%</div>
+                    </div>
+                </div>
+                <div class="canvas-action-grid">
+                    <button class="canvas-action-btn" id="resizeCanvasBtn2">
+                        <svg viewBox="0 0 24 24"><path d="M21 15h2v2h-2v-2zm0-4h2v2h-2v-2zm2 8h-2v2c1 0 2-1 2-2zM13 3h2v2h-2V3zm8 4h2v2h-2V7zm0-4v2h2c0-1-1-2-2-2zM1 7h2v2H1V7zm16-4h2v2h-2V3zm0 16h2v2h-2v-2zM3 3C2 3 1 4 1 5h2V3zm6 0h2v2H9V3zM5 3h2v2H5V3z"/></svg>
+                        <span>Ridimensiona</span>
+                    </button>
+                    <button class="canvas-action-btn" id="fitCanvasBtn">
+                        <svg viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg>
+                        <span>Adatta Schermo</span>
+                    </button>
+                    <button class="canvas-action-btn" id="centerCanvasBtn">
+                        <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+                        <span>Centra</span>
+                    </button>
+                    <button class="canvas-action-btn" id="resetZoomBtn">
+                        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                        <span>Reset Zoom</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Tool Panel -->
+        <div id="textPanel" class="canvas-panel">
+            <div class="canvas-panel-header">
+                <h3>Testo</h3>
+                <button class="close-btn" id="closeTextPanelBtn">×</button>
+            </div>
+            <div class="canvas-panel-content">
+                <div class="text-input-group">
+                    <textarea id="textInput" placeholder="Inserisci testo..." rows="3" class="text-input"></textarea>
+                </div>
+                <div class="text-control-row">
+                    <label class="text-control-label">Font</label>
+                    <select id="fontFamily" class="text-select">
+                        <option value="Arial">Arial</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Times New Roman">Times</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Courier New">Courier</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Comic Sans MS">Comic Sans</option>
+                        <option value="Impact">Impact</option>
+                    </select>
+                </div>
+                <div class="text-control-row">
+                    <label class="text-control-label">Dimensione</label>
+                    <input type="range" id="fontSize" min="12" max="200" value="32" class="text-slider">
+                    <span id="fontSizeValue" class="text-value">32</span>
+                </div>
+                <div class="text-control-row">
+                    <label class="text-control-label">Peso</label>
+                    <select id="fontWeight" class="text-select">
+                        <option value="300">Light</option>
+                        <option value="400" selected>Normal</option>
+                        <option value="600">Semi-Bold</option>
+                        <option value="700">Bold</option>
+                        <option value="900">Black</option>
+                    </select>
+                </div>
+                <div class="text-control-row">
+                    <label class="text-control-label">Colore</label>
+                    <div class="text-color-preview" id="textColorPreview"></div>
+                </div>
+                <div class="text-action-grid">
+                    <button class="canvas-action-btn" id="applyTextBtn">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                        <span>Applica</span>
+                    </button>
+                    <button class="canvas-action-btn" id="cancelTextBtn" style="background: var(--bg-secondary);">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        <span>Annulla</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Color Picker (Clone dedicato) -->
+        <div class="text-color-picker-dropdown" id="textColorPickerDropdown">
+            <div class="color-picker-header">
+                <span>Colore Testo</span>
+                <button class="color-close-btn" id="closeTextColorPicker">×</button>
+            </div>
+            <div class="color-picker-body">
+                <div class="color-custom-selector">
+                    <div class="color-preview-large" id="textColorPreviewLarge"></div>
+                    <button class="color-picker-btn" id="openTextNativePicker">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                        Personalizza
+                    </button>
+                </div>
+                <div class="color-section">
+                    <div class="color-section-title">Recenti</div>
+                    <div class="color-palette" id="textRecentColors"></div>
+                </div>
+                <div class="color-section">
+                    <div class="color-section-title">Palette</div>
+                    <div class="color-palette" id="textPaletteColors"></div>
+                </div>
+            </div>
+        </div>
+        <input type="color" id="textColorPicker" value="#000000" class="color-input-hidden">
+
+        <!-- Layers Panel -->
+        <div id="layersPanel" class="side-panel">
+            <div class="panel-header">
+                <h3>Livelli</h3>
+                <button class="close-btn" id="closeLayersBtn">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="layers-toolbar">
+                    <button class="small-btn" id="addLayerBtn">
+                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        Nuovo Livello
+                    </button>
+                </div>
+                <div id="layersList" class="layers-list"></div>
+            </div>
+        </div>
+
+        <!-- Menu Panel -->
+        <div id="menuPanel" class="side-panel">
+            <div class="panel-header">
+                <h3>Menu</h3>
+                <button class="close-btn" id="closeMenuBtn">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="menu-section">
+                    <h4>Progetto</h4>
+                    <button class="menu-item" id="newProjectBtn">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z"/></svg>
+                        Nuovo Progetto
+                    </button>
+                    <button class="menu-item" id="openProjectBtn">
+                        <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                        Apri Progetto
+                    </button>
+                    <button class="menu-item" id="saveProjectBtn">
+                        <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Salva Progetto
+                    </button>
+                </div>
+                <div class="menu-section">
+                    <h4>Esporta</h4>
+                    <button class="menu-item" id="exportPngBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                        Esporta PNG
+                    </button>
+                    <button class="menu-item" id="exportJpgBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                        Esporta JPG
+                    </button>
+                </div>
+                <div class="menu-section">
+                    <h4>Canvas</h4>
+                    <button class="menu-item" id="clearCanvasBtn">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        Pulisci Canvas
+                    </button>
+                    <button class="menu-item" id="resizeCanvasBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 15h2v2h-2v-2zm0-4h2v2h-2v-2zm2 8h-2v2c1 0 2-1 2-2zM13 3h2v2h-2V3zm8 4h2v2h-2V7zm0-4v2h2c0-1-1-2-2-2zM1 7h2v2H1V7zm16-4h2v2h-2V3zm0 16h2v2h-2v-2zM3 3C2 3 1 4 1 5h2V3zm6 0h2v2H9V3zM5 3h2v2H5V3zm-4 8v8c0 1.1.9 2 2 2h12V11H1zm2 8l2.5-3.21 1.79 2.15 2.5-3.22L13 19H3z"/></svg>
+                        Ridimensiona Canvas
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="side-panel">
+            <div class="panel-header">
+                <h3>Impostazioni</h3>
+                <button class="close-btn" id="closeSettingsBtn">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Tema Scuro</span>
+                        <input type="checkbox" id="darkModeToggle" class="toggle-switch">
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Anti-aliasing</span>
+                        <input type="checkbox" id="antialiasingToggle" class="toggle-switch" checked>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Stabilizzazione Tratto</span>
+                        <input type="checkbox" id="smoothingToggle" class="toggle-switch" checked>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Griglia</span>
+                        <input type="checkbox" id="gridToggle" class="toggle-switch">
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Righello</span>
+                        <input type="checkbox" id="rulerToggle" class="toggle-switch">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
