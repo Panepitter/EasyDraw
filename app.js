@@ -19,6 +19,7 @@ class DrawingApp {
         this.currentLayerIndex = 0;
         this.history = [];
         this.historyStep = -1;
+        this.isRestoringState = false;
         
         this.smoothing = true;
         this.antialiasing = true;
@@ -68,6 +69,12 @@ class DrawingApp {
         this.setupEventListeners();
         this.setupUIControls();
         this.loadSettings();
+        
+        // Salva lo stato iniziale dopo che tutto è pronto
+        // Questo permette di avere un punto di partenza per l'undo
+        setTimeout(() => {
+            this.saveState();
+        }, 100);
     }
 
     setupCanvas() {
@@ -121,9 +128,6 @@ class DrawingApp {
         
         this.layers.push(layer);
         this.updateLayersUI();
-        
-        // Salva lo stato iniziale vuoto
-        this.saveState();
     }
 
     setupEventListeners() {
@@ -350,17 +354,12 @@ class DrawingApp {
         
         this.points = [{x: coords.x, y: coords.y}];
         
-        // Non salvare lo stato qui per brush/pencil/eraser - lo salveremo in stopDrawing
-        // Solo per fill ed eyedropper che sono operazioni immediate
-        if (this.currentTool === 'fill' || this.currentTool === 'eyedropper') {
-            this.saveState();
-        }
-        
         if (this.currentTool === 'eyedropper') {
             this.pickColor(coords.x, coords.y);
             this.isDrawing = false;
         } else if (this.currentTool === 'fill') {
             this.floodFill(coords.x, coords.y);
+            this.saveState();
             this.isDrawing = false;
         } else if (this.currentTool === 'brush' || this.currentTool === 'pencil') {
             // Non disegnare nulla qui - il disegno inizia in draw() quando ci sono almeno 2 punti
@@ -504,16 +503,22 @@ class DrawingApp {
         
         if (!this.isDrawing) return;
         
+        // Flag per sapere se abbiamo disegnato qualcosa
+        let hasDrawn = false;
+        
         // Per le forme geometriche, disegna la forma finale
         if (['line', 'rectangle', 'circle'].includes(this.currentTool)) {
             if (this.currentX !== undefined && this.currentY !== undefined) {
                 this.drawShape(this.currentX, this.currentY);
+                hasDrawn = true;
             }
+        } else if (['brush', 'pencil', 'eraser'].includes(this.currentTool)) {
+            // Per brush/pencil/eraser, controlla se abbiamo almeno 2 punti (movimento minimo)
+            hasDrawn = this.points.length > 1;
         }
         
-        // Salva lo stato DOPO aver finito di disegnare (per tutti i tool)
-        // Esclusi eyedropper e fill che salvano subito in startDrawing
-        if (this.currentTool !== 'eyedropper' && this.currentTool !== 'fill') {
+        // Salva lo stato SOLO se abbiamo effettivamente disegnato qualcosa
+        if (hasDrawn) {
             this.saveState();
         }
         
@@ -1629,9 +1634,6 @@ class DrawingApp {
         this.currentLayerIndex = this.layers.length - 1;
         this.updateLayersUI();
         
-        // Salva lo stato iniziale del nuovo layer vuoto
-        this.saveState();
-        
         this.showToast('Nuovo livello aggiunto', 'success');
     }
 
@@ -1695,10 +1697,21 @@ class DrawingApp {
     saveState() {
         if (this.layers.length === 0) return;
         
-        // Salva TUTTI i layer, non solo quello corrente
+        // Previeni salvataggi durante undo/redo
+        if (this.isRestoringState) return;
+        
+        // Salva TUTTI i layer con metadati completi
         const state = {
-            layers: this.layers.map(layer => layer.canvas.toDataURL()),
-            currentLayerIndex: this.currentLayerIndex
+            layers: this.layers.map(layer => ({
+                data: layer.canvas.toDataURL(),
+                name: layer.name,
+                visible: layer.visible,
+                opacity: layer.opacity,
+                locked: layer.locked,
+                id: layer.id
+            })),
+            currentLayerIndex: this.currentLayerIndex,
+            timestamp: Date.now()
         };
         
         this.historyStep++;
@@ -1712,7 +1725,7 @@ class DrawingApp {
         }
     }
 
-    undo() {
+    async undo() {
         // Resetta stato testo se attivo
         if (this.isPlacingText || this.textPreviewActive) {
             this.isPlacingText = false;
@@ -1722,64 +1735,33 @@ class DrawingApp {
             this.textSettings.x = 0;
             this.textSettings.y = 0;
             this.textSettings.rotation = 0;
-            // Non resettare il colore - mantienilo per il prossimo testo
         }
         
-        if (this.historyStep > 0 && this.history.length > 0) {
-            this.historyStep--;
-            const state = this.history[this.historyStep];
-            
-            // Se lo stato è vecchio formato (solo stringa), gestiscilo
-            if (typeof state === 'string') {
-                // Vecchio formato: solo un layer
-                const img = new Image();
-                img.onload = () => {
-                    const layerCanvas = this.layers[this.currentLayerIndex].canvas;
-                    const layerCtx = layerCanvas.getContext('2d');
-                    layerCtx.save();
-                    layerCtx.setTransform(1, 0, 0, 1, 0, 0);
-                    layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height);
-                    layerCtx.restore();
-                    layerCtx.drawImage(img, 0, 0);
-                    this.composeLayers();
-                };
-                img.src = state;
-            } else {
-                // Nuovo formato: tutti i layer
-                let loadedCount = 0;
-                const totalLayers = state.layers.length;
-                
-                state.layers.forEach((layerData, index) => {
-                    if (this.layers[index]) {
-                        const img = new Image();
-                        img.onload = () => {
-                            const layerCanvas = this.layers[index].canvas;
-                            const layerCtx = layerCanvas.getContext('2d');
-                            layerCtx.save();
-                            layerCtx.setTransform(1, 0, 0, 1, 0, 0);
-                            layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height);
-                            layerCtx.restore();
-                            layerCtx.drawImage(img, 0, 0);
-                            
-                            loadedCount++;
-                            if (loadedCount === totalLayers) {
-                                this.currentLayerIndex = state.currentLayerIndex;
-                                this.composeLayers();
-                                this.updateLayersUI();
-                            }
-                        };
-                        img.src = layerData;
-                    }
-                });
-            }
-            
-            this.showToast('Annulla', 'success');
-        } else {
+        if (this.historyStep <= 0 || this.history.length === 0) {
             this.showToast('Niente da annullare', 'warning');
+            return;
+        }
+        
+        // Previeni operazioni multiple simultanee
+        if (this.isRestoringState) return;
+        this.isRestoringState = true;
+        
+        this.historyStep--;
+        const state = this.history[this.historyStep];
+        
+        try {
+            await this.restoreState(state);
+            this.showToast('Annulla', 'success');
+        } catch (error) {
+            console.error('Errore durante undo:', error);
+            this.showToast('Errore durante annulla', 'error');
+            this.historyStep++;
+        } finally {
+            this.isRestoringState = false;
         }
     }
 
-    redo() {
+    async redo() {
         // Resetta stato testo se attivo
         if (this.isPlacingText || this.textPreviewActive) {
             this.isPlacingText = false;
@@ -1789,61 +1771,107 @@ class DrawingApp {
             this.textSettings.x = 0;
             this.textSettings.y = 0;
             this.textSettings.rotation = 0;
-            // Non resettare il colore - mantienilo per il prossimo testo
         }
         
-        if (this.historyStep < this.history.length - 1) {
-            this.historyStep++;
-            const state = this.history[this.historyStep];
-            
-            // Se lo stato è vecchio formato (solo stringa), gestiscilo
-            if (typeof state === 'string') {
-                // Vecchio formato: solo un layer
-                const img = new Image();
-                img.onload = () => {
-                    const layerCanvas = this.layers[this.currentLayerIndex].canvas;
-                    const layerCtx = layerCanvas.getContext('2d');
-                    layerCtx.save();
-                    layerCtx.setTransform(1, 0, 0, 1, 0, 0);
-                    layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height);
-                    layerCtx.restore();
-                    layerCtx.drawImage(img, 0, 0);
-                    this.composeLayers();
-                };
-                img.src = state;
-            } else {
-                // Nuovo formato: tutti i layer
-                let loadedCount = 0;
-                const totalLayers = state.layers.length;
-                
-                state.layers.forEach((layerData, index) => {
-                    if (this.layers[index]) {
-                        const img = new Image();
-                        img.onload = () => {
-                            const layerCanvas = this.layers[index].canvas;
-                            const layerCtx = layerCanvas.getContext('2d');
-                            layerCtx.save();
-                            layerCtx.setTransform(1, 0, 0, 1, 0, 0);
-                            layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height);
-                            layerCtx.restore();
-                            layerCtx.drawImage(img, 0, 0);
-                            
-                            loadedCount++;
-                            if (loadedCount === totalLayers) {
-                                this.currentLayerIndex = state.currentLayerIndex;
-                                this.composeLayers();
-                                this.updateLayersUI();
-                            }
-                        };
-                        img.src = layerData;
-                    }
-                });
-            }
-            
-            this.showToast('Ripeti', 'success');
-        } else {
+        if (this.historyStep >= this.history.length - 1) {
             this.showToast('Niente da ripetere', 'warning');
+            return;
         }
+        
+        // Previeni operazioni multiple simultanee
+        if (this.isRestoringState) return;
+        this.isRestoringState = true;
+        
+        this.historyStep++;
+        const state = this.history[this.historyStep];
+        
+        try {
+            await this.restoreState(state);
+            this.showToast('Ripeti', 'success');
+        } catch (error) {
+            console.error('Errore durante redo:', error);
+            this.showToast('Errore durante ripeti', 'error');
+            this.historyStep--;
+        } finally {
+            this.isRestoringState = false;
+        }
+    }
+
+    async restoreState(state) {
+        if (!state || !state.layers) {
+            throw new Error('Stato non valido');
+        }
+        
+        // Assicurati che il numero di layer corrisponda
+        const targetLayerCount = state.layers.length;
+        const currentLayerCount = this.layers.length;
+        
+        // Se ci sono più layer nello stato salvato che attualmente
+        if (targetLayerCount > currentLayerCount) {
+            for (let i = currentLayerCount; i < targetLayerCount; i++) {
+                const layer = {
+                    id: Date.now() + i,
+                    name: `Livello ${i + 1}`,
+                    visible: true,
+                    opacity: 1,
+                    canvas: document.createElement('canvas'),
+                    locked: false
+                };
+                layer.canvas.width = this.canvas.width;
+                layer.canvas.height = this.canvas.height;
+                this.layers.push(layer);
+            }
+        }
+        
+        // Se ci sono meno layer nello stato salvato che attualmente
+        if (targetLayerCount < currentLayerCount) {
+            this.layers = this.layers.slice(0, targetLayerCount);
+        }
+        
+        // Carica tutti i layer in sequenza (uno alla volta)
+        for (let i = 0; i < state.layers.length; i++) {
+            const layerState = state.layers[i];
+            const layer = this.layers[i];
+            
+            // Ripristina metadati
+            if (layerState.name) layer.name = layerState.name;
+            if (layerState.visible !== undefined) layer.visible = layerState.visible;
+            if (layerState.opacity !== undefined) layer.opacity = layerState.opacity;
+            if (layerState.locked !== undefined) layer.locked = layerState.locked;
+            
+            // Carica l'immagine in modo sincrono (await)
+            const imageData = layerState.data || layerState;
+            await this.loadImageToLayer(layer, imageData);
+        }
+        
+        // Ripristina l'indice del layer corrente
+        this.currentLayerIndex = Math.min(state.currentLayerIndex || 0, this.layers.length - 1);
+        
+        // Aggiorna UI e rendering
+        this.updateLayersUI();
+        this.composeLayers();
+    }
+
+    loadImageToLayer(layer, imageDataURL) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            
+            img.onload = () => {
+                const layerCtx = layer.canvas.getContext('2d');
+                layerCtx.save();
+                layerCtx.setTransform(1, 0, 0, 1, 0, 0);
+                layerCtx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+                layerCtx.restore();
+                layerCtx.drawImage(img, 0, 0);
+                resolve();
+            };
+            
+            img.onerror = () => {
+                reject(new Error('Errore nel caricamento dell\'immagine del layer'));
+            };
+            
+            img.src = imageDataURL;
+        });
     }
 
     newProject() {
@@ -2500,15 +2528,13 @@ class DrawingApp {
     confirmTextPlacement() {
         if (!this.isPlacingText) return;
         
-        this.saveState();
-        
         const layerCanvas = this.layers[this.currentLayerIndex].canvas;
         const layerCtx = layerCanvas.getContext('2d');
         
         layerCtx.save();
         const font = `${this.textSettings.weight} ${this.textSettings.size}px ${this.textSettings.font}`;
         layerCtx.font = font;
-        layerCtx.fillStyle = this.textSettings.color;  // Usa colore testo separato
+        layerCtx.fillStyle = this.textSettings.color;
         layerCtx.globalAlpha = this.opacity / 100;
         layerCtx.textBaseline = 'top';
         
@@ -2524,6 +2550,9 @@ class DrawingApp {
         
         layerCtx.fillText(this.textSettings.text, this.textSettings.x, this.textSettings.y);
         layerCtx.restore();
+        
+        // Salva lo stato DOPO aver applicato il testo
+        this.saveState();
         
         // Reset stato
         this.isPlacingText = false;
