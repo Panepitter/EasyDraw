@@ -1833,7 +1833,7 @@ class DrawingApp {
             const layerState = state.layers[i];
             const layer = this.layers[i];
             
-            // Ripristina metadati
+            // Ripristina metadati del layer
             if (layerState.name) layer.name = layerState.name;
             if (layerState.visible !== undefined) layer.visible = layerState.visible;
             if (layerState.opacity !== undefined) layer.opacity = layerState.opacity;
@@ -1858,11 +1858,16 @@ class DrawingApp {
             
             img.onload = () => {
                 const layerCtx = layer.canvas.getContext('2d');
+                
+                // Reset completo del context per evitare stati residui
                 layerCtx.save();
                 layerCtx.setTransform(1, 0, 0, 1, 0, 0);
+                layerCtx.globalAlpha = 1;
+                layerCtx.globalCompositeOperation = 'source-over';
                 layerCtx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-                layerCtx.restore();
                 layerCtx.drawImage(img, 0, 0);
+                layerCtx.restore();
+                
                 resolve();
             };
             
